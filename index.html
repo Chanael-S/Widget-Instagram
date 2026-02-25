@@ -1197,7 +1197,7 @@ async function connectNotion() {
     return;
   }
 
-  if (!key.startsWith('secret_')) {
+  if (!key.startsWith('secret_') && !key.startsWith('ntn_')) {
     showSetupError('La clé API doit commencer par "secret_".');
     return;
   }
