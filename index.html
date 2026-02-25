@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Instagram Widget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --ig-border: #dbdbdb;
+  --ig-text: #000;
+  --ig-muted: #737373;
+  --ig-bg: #fff;
+  --ig-surface: #fafafa;
+  --ig-blue: #0095f6;
+  --ig-red: #ed4956;
+  --story-gradient: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  --reel-color: #000;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html, body {
+  font-family: var(--font);
+  background: #fff;
+  color: var(--ig-text);
+  max-width: 470px;
+  margin: 0 auto;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SETUP OVERLAY ── */
+#setupOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.97);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.setup-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--ig-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.setup-logo {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-family: 'Georgia', serif;
+  font-style: italic;
+}
+
+.setup-tag {
+  font-size: 11px;
+  background: #f0f0f0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: var(--ig-muted);
+  font-weight: 500;
+}
+
+.setup-body { padding: 20px 16px; flex: 1; }
+
+.setup-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.setup-sub {
+  font-size: 13px;
+  color: var(--ig-muted);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.setup-field { margin-bottom: 14px; }
+
+.setup-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ig-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+
+.setup-field input, .setup-field select {
+  width: 100%;
+  border: 1px solid var(--ig-border);
+  border-radius: 8px;
+  padding: 11px 12px;
+  font-size: 14px;
+  font-family: var(--font);
+  color: var(--ig-text);
+  background: var(--ig-surface);
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+
+.setup-field input:focus, .setup-field select:focus {
+  border-color: var(--ig-text);
+  background: #fff;
+}
+
+.setup-field input::placeholder { color: #c0c0c0; }
+
+.setup-hint {
+  font-size: 11px;
+  color: var(--ig-muted);
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.setup-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--ig-muted);
+  font-size: 13px;
+}
+
+.setup-divider::before, .setup-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ig-border);
+}
+
+.btn-primary {
+  width: 100%;
+  background: var(--ig-blue);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn-primary:active { opacity: 0.8; }
+
+.btn-demo {
+  width: 100%;
+  background: transparent;
+  color: var(--ig-blue);
+  border: 1px solid var(--ig-border);
+  border-radius: 8px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.15s;
+}
+
+.btn-demo:active { background: var(--ig-surface); }
+
+.setup-notion-help {
+  background: #f7f7f7;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--ig-muted);
+  line-height: 1.7;
+}
+
+.setup-notion-help strong { color: var(--ig-text); }
+
+/* ── HEADER ── */
+.ig-header {
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--ig-border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  z-index: 100;
+}
+
+.ig-header-logo {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Georgia', serif;
+  font-style: italic;
+  flex: 1;
+  letter-spacing: -0.5px;
+}
+
+.ig-header-actions { display: flex; gap: 18px; align-items: center; }
+
+.ig-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  color: var(--ig-text);
+}
+
+.ig-icon-btn svg { width: 24px; height: 24px; }
+
+/* ── PROFILE ── */
+.ig-profile { padding: 16px; }
+
+.ig-profile-top {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+
+.ig-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ig-avatar-ring {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  padding: 2.5px;
+  background: var(--story-gradient);
+  cursor: pointer;
+}
+
+.ig-avatar-ring.no-story {
+  background: var(--ig-border);
+  padding: 1.5px;
+}
+
+.ig-avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2.5px solid white;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 32px;
+}
+
+.ig-avatar-inner img { width: 100%; height: 100%; object-fit: cover; }
+
+.ig-stats { display: flex; flex: 1; justify-content: space-around; }
+
+.ig-stat { text-align: center; cursor: pointer; }
+
+.ig-stat-value {
+  font-size: 17px;
+  font-weight: 700;
+  display: block;
+  line-height: 1.2;
+}
+
+.ig-stat-label {
+  font-size: 12px;
+  color: var(--ig-text);
+}
+
+.ig-profile-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.ig-profile-bio {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ig-text);
+  white-space: pre-line;
+}
+
+.ig-profile-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.ig-btn {
+  flex: 1;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  border: 1px solid var(--ig-border);
+  background: #efefef;
+  color: var(--ig-text);
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.ig-btn:active { background: #e0e0e0; }
+
+.ig-btn.primary {
+  background: var(--ig-blue);
+  color: white;
+  border-color: var(--ig-blue);
+}
+
+.ig-btn.icon {
+  flex: none;
+  width: 36px;
+  padding: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ig-add-account {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  font-size: 14px;
+  color: var(--ig-blue);
+  font-weight: 600;
+  cursor: pointer;
+  border-top: 1px solid var(--ig-border);
+  margin-top: 14px;
+}
+
+/* ── STORIES BAR ── */
+.ig-stories-bar {
+  border-top: 1px solid var(--ig-border);
+  border-bottom: 1px solid var(--ig-border);
+  padding: 12px 0 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  display: flex;
+}
+
+.ig-stories-bar::-webkit-scrollbar { display: none; }
+
+.ig-stories-inner {
+  display: flex;
+  gap: 4px;
+  padding: 0 12px;
+}
+
+.ig-story-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 70px;
+}
+
+.ig-story-ring {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  padding: 2px;
+  background: var(--story-gradient);
+  transition: transform 0.15s;
+}
+
+.ig-story-ring:active { transform: scale(0.95); }
+
+.ig-story-ring.seen {
+  background: #c7c7c7;
+}
+
+.ig-story-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  overflow: hidden;
+}
+
+.ig-story-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.ig-story-name {
+  font-size: 11px;
+  color: var(--ig-text);
+  text-align: center;
+  width: 66px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── TABS ── */
+.ig-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--ig-border);
+}
+
+.ig-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  margin-bottom: -1px;
+  transition: border-color 0.15s, color 0.15s;
+  color: #a0a0a0;
+}
+
+.ig-tab.active {
+  border-bottom-color: var(--ig-text);
+  color: var(--ig-text);
+}
+
+.ig-tab svg { width: 22px; height: 22px; }
+
+/* ── GRID ── */
+.ig-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.ig-grid-item {
+  position: relative;
+  aspect-ratio: 1;
+  background: #f0f0f0;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.ig-grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.2s;
+}
+
+.ig-grid-item:active img { opacity: 0.8; }
+
+.ig-grid-emoji {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  background: #f5f5f5;
+}
+
+.ig-grid-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.ig-grid-badge svg { width: 18px; height: 18px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+
+.ig-grid-empty {
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #c7c7c7;
+  aspect-ratio: 1;
+}
+
+/* ── REELS GRID ── */
+.ig-reels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.ig-reel-item {
+  position: relative;
+  aspect-ratio: 9/16;
+  background: #000;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.ig-reel-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+
+.ig-reel-emoji {
+  width: 100%;
+  height: 100%;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+}
+
+.ig-reel-views {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.ig-reel-views svg { width: 14px; height: 14px; }
+
+.ig-reel-play {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.ig-reel-play svg { width: 16px; height: 16px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+
+/* ── EMPTY TABS ── */
+.ig-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 12px;
+}
+
+.ig-empty-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 2px solid var(--ig-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ig-empty-icon svg { width: 28px; height: 28px; }
+
+.ig-empty h3 { font-size: 20px; font-weight: 300; }
+.ig-empty p { font-size: 14px; color: var(--ig-muted); text-align: center; line-height: 1.5; }
+
+/* ── STORY MODAL ── */
+.ig-story-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  flex-direction: column;
+  max-width: 470px;
+  margin: 0 auto;
+}
+
+.ig-story-modal.open { display: flex; }
+
+.story-progress-bars {
+  display: flex;
+  gap: 3px;
+  padding: 8px 10px 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.story-prog-segment {
+  flex: 1;
+  height: 2px;
+  background: rgba(255,255,255,0.35);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.story-prog-fill {
+  height: 100%;
+  background: white;
+  width: 0%;
+  border-radius: 2px;
+}
+
+.story-prog-fill.done { width: 100%; }
+.story-prog-fill.active {
+  width: 0%;
+  animation: storyFill 5s linear forwards;
+}
+
+@keyframes storyFill { to { width: 100%; } }
+
+.story-modal-header {
+  position: absolute;
+  top: 16px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.story-modal-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid white;
+  background: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.story-modal-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  flex: 1;
+}
+
+.story-modal-time {
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+}
+
+.story-modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.story-modal-media {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.story-modal-media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.story-modal-emoji {
+  font-size: 100px;
+}
+
+.story-modal-caption {
+  position: absolute;
+  bottom: 20px;
+  left: 16px;
+  right: 16px;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  line-height: 1.4;
+}
+
+.story-modal-footer {
+  padding: 12px 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.story-reply-input {
+  flex: 1;
+  border: 1.5px solid rgba(255,255,255,0.5);
+  border-radius: 22px;
+  background: transparent;
+  padding: 9px 16px;
+  color: white;
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+}
+
+.story-reply-input::placeholder { color: rgba(255,255,255,0.6); }
+
+.story-footer-icon {
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.story-nav {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.story-nav.prev { left: 0; }
+.story-nav.next { right: 0; }
+
+/* ── POST MODAL ── */
+.ig-post-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 9998;
+  align-items: flex-end;
+  max-width: 470px;
+  margin: 0 auto;
+}
+
+.ig-post-modal.open { display: flex; }
+
+.ig-post-sheet {
+  background: white;
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.post-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: #d0d0d0;
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+
+.post-sheet-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--ig-border);
+}
+
+.post-sheet-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.post-sheet-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.post-sheet-user { flex: 1; }
+.post-sheet-username { font-size: 14px; font-weight: 600; }
+.post-sheet-date { font-size: 12px; color: var(--ig-muted); }
+
+.post-sheet-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--ig-text);
+  line-height: 1;
+}
+
+.post-sheet-media {
+  aspect-ratio: 1;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.post-sheet-media img { width: 100%; height: 100%; object-fit: cover; }
+.post-sheet-media-emoji { font-size: 80px; }
+
+.post-sheet-actions {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px 6px;
+  gap: 14px;
+}
+
+.post-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 15px;
+  color: var(--ig-text);
+  font-family: var(--font);
+  font-weight: 500;
+}
+
+.post-action-btn svg { width: 24px; height: 24px; }
+.post-action-btn span { font-size: 13px; font-weight: 600; }
+
+.post-likes-count {
+  padding: 0 14px 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.post-caption {
+  padding: 0 14px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.post-caption strong { font-weight: 700; }
+
+.post-comments-link {
+  padding: 0 14px 14px;
+  font-size: 14px;
+  color: var(--ig-muted);
+  cursor: pointer;
+}
+
+.post-type-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.post-type-indicator.REEL { color: #000; }
+.post-type-indicator.POST { color: var(--ig-blue); }
+
+/* ── LOADING ── */
+.ig-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  gap: 16px;
+}
+
+.ig-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid #f0f0f0;
+  border-top-color: var(--ig-blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── FOOTER ── */
+.ig-footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 12px;
+  color: #c7c7c7;
+  border-top: 1px solid var(--ig-border);
+  margin-top: 16px;
+}
+
+/* ── NOTION BADGE ── */
+.notion-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f7f7f7;
+  border: 1px solid var(--ig-border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--ig-muted);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.notion-badge svg { width: 12px; height: 12px; }
+
+/* ── Animations ── */
+.ig-grid-item, .ig-reel-item, .ig-story-item {
+  animation: fadeIn 0.3s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── SETUP OVERLAY ── -->
+<div id="setupOverlay">
+  <div class="setup-header">
+    <div class="setup-logo">Instagram</div>
+    <div class="setup-tag">× Notion</div>
+  </div>
+  <div class="setup-body">
+    <div class="setup-title">Configurer le widget</div>
+    <div class="setup-sub">Connecte ta base de données Notion pour afficher tes contenus Instagram.</div>
+
+    <div class="setup-field">
+      <label>🔑 Clé API Notion</label>
+      <input type="password" id="cfgKey" placeholder="secret_xxxxxxxxxxxxxxxxxxxx">
+      <div class="setup-hint">notion.so/my-integrations → New integration → Internal → copie le secret</div>
+    </div>
+
+    <div class="setup-field">
+      <label>🗃️ ID de la base de données</label>
+      <input type="text" id="cfgDb" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+      <div class="setup-hint">Dans l'URL Notion après le dernier / et avant le ?</div>
+    </div>
+
+    <div class="setup-field">
+      <label>👤 Nom du compte</label>
+      <input type="text" id="cfgUsername" placeholder="mon_compte">
+    </div>
+
+    <div class="setup-field">
+      <label>📝 Bio (une ligne par •)</label>
+      <input type="text" id="cfgBio" placeholder="🚀 Créateur de contenu • 📍 Paris">
+    </div>
+
+    <button class="btn-primary" onclick="connectNotion()">Se connecter à Notion</button>
+
+    <div class="setup-divider">OU</div>
+
+    <button class="btn-demo" onclick="loadDemo()">Voir la démo</button>
+
+    <div class="setup-notion-help">
+      <strong>Colonnes attendues dans Notion :</strong><br>
+      <code>Name</code> (titre) · <code>Type</code> (POST / REEL / STORY) · <code>Caption</code> · <code>Image</code> (URL) · <code>Likes</code> · <code>Comments</code> · <code>Views</code> · <code>Date</code> · <code>Duration</code>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app" style="display:none">
+
+  <!-- Header -->
+  <div class="ig-header">
+    <div class="ig-header-logo" id="appUsername">Instagram</div>
+    <div class="ig-header-actions">
+      <button class="ig-icon-btn" onclick="showSetup()" title="Paramètres">
+        <!-- settings -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+      <!-- refresh -->
+      <button class="ig-icon-btn" onclick="refreshFeed()" title="Actualiser">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Profile -->
+  <div class="ig-profile">
+    <div class="ig-profile-top">
+      <div class="ig-avatar-wrap">
+        <div class="ig-avatar-ring" id="profileAvatarRing" onclick="openFirstStory()">
+          <div class="ig-avatar-inner" id="profileAvatar">📷</div>
+        </div>
+      </div>
+      <div class="ig-stats">
+        <div class="ig-stat" id="statPosts"><span class="ig-stat-value">0</span><span class="ig-stat-label">publications</span></div>
+        <div class="ig-stat" id="statFollowers"><span class="ig-stat-value">0</span><span class="ig-stat-label">abonnés</span></div>
+        <div class="ig-stat" id="statFollowing"><span class="ig-stat-value">0</span><span class="ig-stat-label">suivi(e)s</span></div>
+      </div>
+    </div>
+    <div class="ig-profile-name" id="profileName">Mon Compte</div>
+    <div class="ig-profile-bio" id="profileBio"></div>
+    <div class="ig-profile-actions">
+      <div class="ig-btn primary">Suivre</div>
+      <div class="ig-btn">Message</div>
+      <div class="ig-btn">👤+</div>
+      <div class="ig-btn icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+    <div class="ig-add-account" id="notionBadge">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Ajouter des comptes
+    </div>
+  </div>
+
+  <!-- Stories Bar -->
+  <div class="ig-stories-bar" id="storiesBar" style="display:none">
+    <div class="ig-stories-inner" id="storiesInner"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="ig-tabs">
+    <div class="ig-tab active" id="tabGrid" onclick="switchTab('grid')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+    </div>
+    <div class="ig-tab" id="tabReels" onclick="switchTab('reels')">
+      <!-- reels icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20"/><path d="M17 2v20"/><path d="M2 12h20"/><path d="M2 7h5"/><path d="M2 17h5"/><path d="M17 17h5"/><path d="M17 7h5"/>
+      </svg>
+    </div>
+    <div class="ig-tab" id="tabTagged" onclick="switchTab('tagged')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div id="contentArea"></div>
+
+  <div class="ig-footer">
+    <div class="notion-badge" onclick="showSetup()">
+      <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="3"/></svg>
+      Données Notion
+    </div>
+  </div>
+</div>
+
+<!-- ── STORY MODAL ── -->
+<div class="ig-story-modal" id="storyModal">
+  <div class="story-progress-bars" id="storyProgressBars"></div>
+  <div class="story-modal-header">
+    <div class="story-modal-avatar" id="storyModalAvatar">📷</div>
+    <div>
+      <div class="story-modal-name" id="storyModalName"></div>
+      <div class="story-modal-time" id="storyModalTime"></div>
+    </div>
+    <button class="story-modal-close" onclick="closeStoryModal()">✕</button>
+  </div>
+  <div class="story-nav prev" onclick="prevStory()"></div>
+  <div class="story-nav next" onclick="nextStory()"></div>
+  <div class="story-modal-media" id="storyModalMedia"></div>
+  <div class="story-modal-footer">
+    <input class="story-reply-input" placeholder="Répondre à la story…">
+    <div class="story-footer-icon">❤️</div>
+    <div class="story-footer-icon">📤</div>
+  </div>
+</div>
+
+<!-- ── POST MODAL ── -->
+<div class="ig-post-modal" id="postModal" onclick="closePostModal(event)">
+  <div class="ig-post-sheet" id="postSheet">
+    <div class="post-sheet-handle"></div>
+    <div class="post-sheet-header">
+      <div class="post-sheet-avatar" id="postSheetAvatar">📷</div>
+      <div class="post-sheet-user">
+        <div class="post-sheet-username" id="postSheetUsername"></div>
+        <div class="post-sheet-date" id="postSheetDate"></div>
+      </div>
+      <button class="post-sheet-close" onclick="closePostModalBtn()">✕</button>
+    </div>
+    <div class="post-sheet-media" id="postSheetMedia"></div>
+    <div class="post-type-indicator" id="postSheetType"></div>
+    <div class="post-sheet-actions">
+      <button class="post-action-btn" id="postLikeBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span id="postLikeCount"></span>
+      </button>
+      <button class="post-action-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span id="postCommentCount"></span>
+      </button>
+      <button class="post-action-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+      <button class="post-action-btn" style="margin-left:auto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="19 21 12 16 5 21 5 3 19 3 19 21"/></svg>
+      </button>
+    </div>
+    <div class="post-likes-count" id="postLikesLabel"></div>
+    <div class="post-caption" id="postCaption"></div>
+    <div class="post-comments-link" id="postCommentsLink"></div>
+  </div>
+</div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────────────────────
+let state = {
+  profile: null,
+  items: [],
+  stories: [],
+  posts: [],
+  reels: [],
+  currentTab: 'grid',
+  storyIndex: 0,
+  storyTimer: null,
+  currentStories: [],
+  notionKey: '',
+  dbId: '',
+};
+
+// ─── Demo ───────────────────────────────────────────────────────────────────
+const DEMO = {
+  profile: {
+    username: 'mon.compte',
+    displayName: 'Mon Compte Principal',
+    bio: '🚀 Créateur de contenu\n📸 Planning Instagram\n📍 Paris, France',
+    avatar: '📷',
+    followers: '1,234',
+    following: '567',
+    posts: 6,
+  },
+  items: [
+    { id:'s1', type:'STORY', caption:'Bonne journée ☀️', emoji:'☀️', date:'2h', seen:false },
+    { id:'s2', type:'STORY', caption:'Nouveau projet 🎨', emoji:'🎨', date:'4h', seen:false },
+    { id:'s3', type:'STORY', caption:'Coffee time ☕', emoji:'☕', date:'6h', seen:true },
+    { id:'p1', type:'POST', caption:'Une belle journée pour créer quelque chose de nouveau ✨ #design #creativity #paris', emoji:'🏙️', likes:1243, comments:87, date:'20 fév', image:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80' },
+    { id:'r1', type:'REEL', caption:'Tutoriel Figma en 60 secondes 🎨 #design #figma #ui #tutorial', emoji:'🎨', likes:4521, comments:203, views:28400, date:'19 fév', duration:'0:58', image:'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&q=80' },
+    { id:'p2', type:'POST', caption:'Workspace minimaliste 🖥️ Less is more', emoji:'🖥️', likes:892, comments:45, date:'18 fév', image:'https://images.unsplash.com/photo-1587440871875-191322ee64b0?w=600&q=80' },
+    { id:'r2', type:'REEL', caption:'Morning routine productive 🌅 5 habitudes', emoji:'🌅', likes:7832, comments:341, views:67200, date:'17 fév', duration:'0:45', image:'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80' },
+    { id:'p3', type:'POST', caption:'Travelling 🌍 #travel #wanderlust', emoji:'🌍', likes:2103, comments:128, date:'16 fév', image:'https://images.unsplash.com/photo-1500835556837-99ac94a94552?w=600&q=80' },
+    { id:'p4', type:'POST', caption:'Street photography 📸 Urban vibes', emoji:'📸', likes:1567, comments:94, date:'15 fév', image:'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&q=80' },
+    { id:'r3', type:'REEL', caption:'Recipe challenge 🍝 Carbonara en 3 min', emoji:'🍝', likes:9241, comments:512, views:143000, date:'14 fév', duration:'2:58', image:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80' },
+    { id:'p5', type:'POST', caption:'Sunset 🌇 Golden hour magic', emoji:'🌇', likes:3241, comments:167, date:'13 fév', image:'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=600&q=80' },
+    { id:'r4', type:'REEL', caption:'CSS animations tricks 💻 #webdev', emoji:'💻', likes:5431, comments:289, views:52100, date:'12 fév', duration:'1:23', image:'https://images.unsplash.com/photo-1537432376769-00f5c2f4c8d2?w=400&q=80' },
+  ]
+};
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+const fmtNum = n => !n ? '0' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : String(n);
+const $ = id => document.getElementById(id);
+
+// ─── Setup / Load ────────────────────────────────────────────────────────────
+function showSetup() {
+  $('setupOverlay').style.display = 'flex';
+}
+
+async function connectNotion() {
+  const key = $('cfgKey').value.trim();
+  const db = $('cfgDb').value.trim().replace(/-/g,'');
+  const username = $('cfgUsername').value.trim() || 'mon_compte';
+  const bio = $('cfgBio').value.trim() || '';
+
+  if (!key || !db) {
+    showSetupError('Merci de renseigner la clé API et l\'ID de la base.');
+    return;
+  }
+
+  if (!key.startsWith('secret_')) {
+    showSetupError('La clé API doit commencer par "secret_".');
+    return;
+  }
+
+  if (db.length !== 32) {
+    showSetupError('L\'ID de la base doit faire 32 caractères (sans les tirets).\nActuellement : ' + db.length + ' caractères.');
+    return;
+  }
+
+  state.notionKey = key;
+  state.dbId = db;
+
+  // Show loading state in button
+  const btn = document.querySelector('.btn-primary');
+  btn.textContent = 'Connexion…';
+  btn.disabled = true;
+
+  try {
+    // Appel via notre proxy Vercel /api/notion (pas de problème CORS)
+    const res = await fetch('/api/notion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ databaseId: db, notionKey: key }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      // Erreurs Notion lisibles
+      const msgs = {
+        'unauthorized': '❌ Clé API invalide ou expirée.\nVérifie ton "Internal Integration Secret".',
+        'object_not_found': '❌ Base de données introuvable.\nVérifie l\'ID et que l\'intégration est bien connectée (··· > Connections).',
+        'restricted_resource': '❌ Accès refusé.\nAjoute l\'intégration à ta base via ··· > Connections.',
+      };
+      throw new Error(msgs[data.code] || `Erreur Notion : ${data.error || res.status}`);
+    }
+
+    if (!data.results || data.results.length === 0) {
+      throw new Error('⚠️ La base est vide ou aucune entrée n\'a été trouvée.\nAjoute au moins un enregistrement avec une colonne "Type".');
+    }
+
+    const items = mapNotion(data.results);
+    const postsCount = items.filter(i => i.type !== 'STORY').length;
+
+    $('setupOverlay').style.display = 'none';
+    $('app').style.display = 'block';
+
+    initApp({
+      profile: {
+        username,
+        displayName: username.replace(/_/g,' '),
+        bio,
+        avatar: '📷',
+        followers: postsCount + '',
+        following: '0',
+        posts: postsCount,
+      },
+      items,
+    });
+
+  } catch(e) {
+    btn.textContent = 'Se connecter à Notion';
+    btn.disabled = false;
+    showSetupError(e.message);
+  }
+}
+
+function showSetupError(msg) {
+  let el = $('setupError');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'setupError';
+    el.style.cssText = 'background:#fff0f0;border:1px solid #ffcdd2;border-radius:8px;padding:12px 14px;font-size:13px;color:#c0392b;line-height:1.6;white-space:pre-line;margin-top:12px;';
+    document.querySelector('.setup-body').appendChild(el);
+  }
+  el.textContent = msg;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function loadDemo() {
+  $('setupOverlay').style.display = 'none';
+  $('app').style.display = 'block';
+  initApp(DEMO);
+}
+
+function mapNotion(results) {
+  return results.map(page => {
+    const p = page.properties;
+    const g = (keys, fallback='') => {
+      for (const k of [].concat(keys)) {
+        const prop = p[k];
+        if (!prop) continue;
+        if (prop.title?.length) return prop.title.map(t=>t.plain_text).join('');
+        if (prop.rich_text?.length) return prop.rich_text.map(t=>t.plain_text).join('');
+        if (prop.select) return prop.select?.name || fallback;
+        if (prop.number !== undefined) return prop.number;
+        if (prop.url) return prop.url;
+        if (prop.date) return prop.date?.start || fallback;
+        if (prop.files?.length) { const f=prop.files[0]; return f.file?.url||f.external?.url||fallback; }
+      }
+      return fallback;
+    };
+    const t = (g(['Type','type','Content Type'])||'POST').toUpperCase();
+    return {
+      id: page.id,
+      type: ['POST','REEL','STORY'].includes(t) ? t : 'POST',
+      caption: g(['Caption','caption','Description','Name','Titre']),
+      image: g(['Image','image','Cover','Photo','Thumbnail']),
+      emoji: t==='REEL'?'🎬':t==='STORY'?'⭕':'🖼️',
+      likes: parseInt(g(['Likes','likes','J\'aime'])||0),
+      comments: parseInt(g(['Comments','commentaires','Commentaires'])||0),
+      views: parseInt(g(['Views','vues','Vues'])||0),
+      date: g(['Date','date','Publié le']),
+      duration: g(['Duration','Durée']),
+      seen: false,
+    };
+  });
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+function initApp(data) {
+  state.profile = data.profile;
+  state.items = data.items;
+  state.stories = data.items.filter(i => i.type === 'STORY');
+  state.posts = data.items.filter(i => i.type === 'POST');
+  state.reels = data.items.filter(i => i.type === 'REEL');
+
+  renderProfile();
+  renderStoriesBar();
+  renderContent();
+}
+
+function refreshFeed() {
+  if (state.notionKey && state.dbId) {
+    connectNotion();
+  } else {
+    $('contentArea').innerHTML = '<div class="ig-loading"><div class="ig-spinner"></div></div>';
+    setTimeout(() => renderContent(), 600);
+  }
+}
+
+// ─── Profile ─────────────────────────────────────────────────────────────────
+function renderProfile() {
+  const p = state.profile;
+  $('appUsername').textContent = p.username || 'Instagram';
+  $('profileName').textContent = p.displayName || p.username;
+  $('profileBio').textContent = p.bio || '';
+
+  // Avatar
+  const av = $('profileAvatar');
+  if (p.avatarUrl) {
+    av.innerHTML = `<img src="${p.avatarUrl}" alt="">`;
+  } else {
+    av.textContent = p.avatar || '📷';
+  }
+
+  // Ring
+  $('profileAvatarRing').className = 'ig-avatar-ring' + (state.stories.length > 0 ? '' : ' no-story');
+
+  // Stats
+  $('statPosts').innerHTML = `<span class="ig-stat-value">${p.posts}</span><span class="ig-stat-label">publications</span>`;
+  $('statFollowers').innerHTML = `<span class="ig-stat-value">${p.followers}</span><span class="ig-stat-label">abonnés</span>`;
+  $('statFollowing').innerHTML = `<span class="ig-stat-value">${p.following}</span><span class="ig-stat-label">suivi(e)s</span>`;
+}
+
+// ─── Stories Bar ──────────────────────────────────────────────────────────────
+function renderStoriesBar() {
+  if (state.stories.length === 0) { $('storiesBar').style.display = 'none'; return; }
+
+  $('storiesBar').style.display = 'flex';
+  $('storiesInner').innerHTML = state.stories.map((s, i) => `
+    <div class="ig-story-item" onclick="openStory(${i})">
+      <div class="ig-story-ring ${s.seen ? 'seen' : ''}">
+        <div class="ig-story-avatar">
+          ${s.image ? `<img src="${s.image}" alt="" onerror="this.parentElement.textContent='${s.emoji}'">` : s.emoji}
+        </div>
+      </div>
+      <div class="ig-story-name">${(s.caption||'Story').split(' ').slice(0,2).join(' ')}</div>
+    </div>
+  `).join('');
+}
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  state.currentTab = tab;
+  ['grid','reels','tagged'].forEach(t => {
+    $('tab'+t.charAt(0).toUpperCase()+t.slice(1)).className = 'ig-tab' + (t === tab ? ' active' : '');
+  });
+  renderContent();
+}
+
+// ─── Content ──────────────────────────────────────────────────────────────────
+function renderContent() {
+  const el = $('contentArea');
+
+  if (state.currentTab === 'grid') {
+    const items = [...state.posts, ...state.reels].sort(() => 0); // keep order
+    if (items.length === 0) { el.innerHTML = emptyState('posts'); return; }
+
+    const cells = items.slice(0,9).map((item, i) => {
+      const isReel = item.type === 'REEL';
+      const media = item.image
+        ? `<img src="${item.image}" alt="" onerror="this.style.display='none'">`
+        : '';
+      const emoji = `<div class="ig-grid-emoji">${item.emoji}</div>`;
+
+      const badge = isReel ? `<div class="ig-grid-badge">
+        <svg viewBox="0 0 24 24" fill="white" stroke="none"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5" stroke="#000" stroke-width="1.5" fill="none"/></svg>
+      </div>` : '';
+
+      // multi-image badge for POST
+      const multiBadge = !isReel ? `<div class="ig-grid-badge">
+        <svg viewBox="0 0 24 24" fill="white" width="18" height="18"><rect x="8" y="2" width="13" height="13" rx="2"/><rect x="2" y="8" width="13" height="13" rx="2" fill="white" stroke="white"/><rect x="3" y="9" width="11" height="11" rx="2" fill="#ccc"/></svg>
+      </div>` : '';
+
+      return `<div class="ig-grid-item" onclick="openPost('${item.id}')" style="animation-delay:${i*0.04}s">
+        ${item.image ? media + `<div style="display:none">${emoji}</div>` : emoji}
+        ${badge}
+      </div>`;
+    });
+
+    // Fill empty slots
+    while (cells.length < 9) cells.push(`<div class="ig-grid-empty">Vide</div>`);
+
+    el.innerHTML = `<div class="ig-grid">${cells.join('')}</div>`;
+
+  } else if (state.currentTab === 'reels') {
+    if (state.reels.length === 0) { el.innerHTML = emptyState('reels'); return; }
+
+    el.innerHTML = `<div class="ig-reels-grid">${state.reels.map((r, i) => `
+      <div class="ig-reel-item" onclick="openPost('${r.id}')" style="animation-delay:${i*0.05}s">
+        ${r.image ? `<img src="${r.image}" alt="" onerror="this.style.display='none'">` : ''}
+        <div class="ig-reel-emoji" style="${r.image?'display:none':'display:flex'}">${r.emoji}</div>
+        <div class="ig-reel-play">
+          <svg viewBox="0 0 24 24" fill="white" width="16" height="16"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        ${r.views ? `<div class="ig-reel-views">
+          <svg viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          ${fmtNum(r.views)}
+        </div>` : ''}
+      </div>
+    `).join('')}</div>`;
+
+  } else if (state.currentTab === 'tagged') {
+    el.innerHTML = emptyState('tagged');
+  }
+}
+
+function emptyState(type) {
+  const icons = {
+    posts: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+    reels: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    tagged: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+  };
+  const labels = {
+    posts: ['Aucune publication', 'Les posts et reels apparaîtront ici.'],
+    reels: ['Aucun Reel', 'Les reels apparaîtront ici.'],
+    tagged: ['Aucune photo', 'Les photos où tu es mentionné(e) apparaîtront ici.'],
+  };
+  return `<div class="ig-empty">
+    <div class="ig-empty-icon">${icons[type]||icons.posts}</div>
+    <h3>${labels[type][0]}</h3>
+    <p>${labels[type][1]}</p>
+  </div>`;
+}
+
+// ─── Story Modal ─────────────────────────────────────────────────────────────
+function openFirstStory() {
+  if (state.stories.length > 0) openStory(0);
+}
+
+function openStory(index) {
+  state.currentStories = state.stories;
+  state.storyIndex = index;
+  showCurrentStory();
+  $('storyModal').classList.add('open');
+}
+
+function showCurrentStory() {
+  clearTimeout(state.storyTimer);
+  const stories = state.currentStories;
+  const s = stories[state.storyIndex];
+  if (!s) { closeStoryModal(); return; }
+
+  // Mark seen
+  s.seen = true;
+  renderStoriesBar();
+
+  // Profile info
+  $('storyModalAvatar').textContent = state.profile?.avatar || '📷';
+  $('storyModalName').textContent = state.profile?.username || 'mon_compte';
+  $('storyModalTime').textContent = s.date || 'Aujourd\'hui';
+
+  // Media
+  const media = $('storyModalMedia');
+  if (s.image) {
+    media.innerHTML = `<img src="${s.image}" alt="" onerror="this.outerHTML='<div class=story-modal-emoji>${s.emoji}</div>'">`;
+  } else {
+    media.innerHTML = `<div class="story-modal-emoji">${s.emoji}</div>`;
+  }
+  if (s.caption) media.innerHTML += `<div class="story-modal-caption">${s.caption}</div>`;
+
+  // Progress bars
+  $('storyProgressBars').innerHTML = stories.map((_, i) => `
+    <div class="story-prog-segment">
+      <div class="story-prog-fill ${i < state.storyIndex ? 'done' : i === state.storyIndex ? 'active' : ''}"></div>
+    </div>
+  `).join('');
+
+  state.storyTimer = setTimeout(nextStory, 5000);
+}
+
+function nextStory() {
+  if (state.storyIndex < state.currentStories.length - 1) {
+    state.storyIndex++;
+    showCurrentStory();
+  } else {
+    closeStoryModal();
+  }
+}
+
+function prevStory() {
+  if (state.storyIndex > 0) {
+    state.storyIndex--;
+    showCurrentStory();
+  }
+}
+
+function closeStoryModal() {
+  clearTimeout(state.storyTimer);
+  $('storyModal').classList.remove('open');
+}
+
+// ─── Post Modal ───────────────────────────────────────────────────────────────
+function openPost(id) {
+  const item = state.items.find(i => i.id === id);
+  if (!item) return;
+  const p = state.profile;
+
+  $('postSheetAvatar').textContent = p?.avatar || '📷';
+  $('postSheetUsername').textContent = p?.username || 'mon_compte';
+  $('postSheetDate').textContent = item.date || '';
+
+  const media = $('postSheetMedia');
+  if (item.image) {
+    media.innerHTML = `<img src="${item.image}" alt="" onerror="this.outerHTML='<div class=post-sheet-media-emoji>${item.emoji}</div>'">`;
+  } else {
+    media.innerHTML = `<div class="post-sheet-media-emoji">${item.emoji}</div>`;
+  }
+
+  const typeEl = $('postSheetType');
+  if (item.type === 'REEL') {
+    typeEl.className = 'post-type-indicator REEL';
+    typeEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 2v20M17 2v20M2 12h20"/></svg> REEL · ${item.duration || ''}`;
+  } else {
+    typeEl.className = 'post-type-indicator POST';
+    typeEl.innerHTML = '';
+  }
+
+  $('postLikeCount').textContent = fmtNum(item.likes);
+  $('postCommentCount').textContent = fmtNum(item.comments);
+  $('postLikesLabel').textContent = fmtNum(item.likes) + ' J\'aime';
+  $('postCaption').innerHTML = `<strong>${p?.username||'compte'}</strong> ${item.caption || ''}`;
+  $('postCommentsLink').textContent = item.comments > 0 ? `Voir les ${fmtNum(item.comments)} commentaires` : '';
+
+  $('postModal').classList.add('open');
+}
+
+function closePostModal(e) {
+  if (e.target === $('postModal')) closePostModalBtn();
+}
+
+function closePostModalBtn() {
+  $('postModal').classList.remove('open');
+}
+
+// ─── Auto-load ────────────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+if (params.get('demo') === '1') loadDemo();
+</script>
+</body>
+</html>
