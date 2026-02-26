@@ -56,7 +56,7 @@ html,body{font-family:var(--font);background:#fff;color:var(--ig-text);max-width
 .ig-header{position:sticky;top:0;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--ig-border);padding:12px 16px;display:flex;align-items:center;z-index:100;gap:12px}
 .ig-logo{font-size:20px;font-weight:700;font-family:Georgia,serif;font-style:italic;flex:1;letter-spacing:-.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
 .ig-logo-chevron{font-size:12px;color:var(--ig-muted);transition:transform .2s;line-height:1}
-.ig-header-actions{display:flex;gap:0;align-items:center;padding-right:15px}
+.ig-header-actions{display:flex;gap:0;align-items:center;padding-left:0}
 .ig-icon-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;color:var(--ig-text)}
 .ig-icon-btn svg{width:24px;height:24px}
 
@@ -240,15 +240,16 @@ html,body{font-family:var(--font);background:#fff;color:var(--ig-text);max-width
 <!-- APP -->
 <div id="app" style="display:none">
   <div class="ig-header">
+    <div class="ig-header-actions">
+      <button class="ig-icon-btn" onclick="refreshFeed()" title="Actualiser">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+    </div>
     <div class="ig-logo" onclick="toggleDD()">
       <span id="appUsername">Instagram</span>
       <span class="ig-logo-chevron" id="logoChevron">▾</span>
     </div>
-    <div class="ig-header-actions">
-<button class="ig-icon-btn" onclick="refreshFeed()" title="Actualiser">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-      </button>
-    </div>
+    <div style="width:39px"></div>
   </div>
 
   <div class="profile-dd" id="profileDD">
