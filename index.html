@@ -970,8 +970,10 @@ html, body {
     </div>
 
     <div class="setup-field">
-      <label>📝 Bio (une ligne par •)</label>
-      <input type="text" id="cfgBio" placeholder="🚀 Créateur de contenu • 📍 Paris">
+      <label>📝 Bio (3 lignes max)</label>
+      <textarea id="cfgBio" rows="3" placeholder="🚀 Créateur de contenu
+📸 Planning Instagram
+📍 Paris, France" style="width:100%;border:1px solid var(--ig-border);border-radius:8px;padding:11px 12px;font-size:14px;font-family:var(--font);color:var(--ig-text);background:var(--ig-surface);outline:none;resize:none;line-height:1.5;"></textarea>
     </div>
 
     <button class="btn-primary" onclick="connectNotion()">Se connecter à Notion</button>
@@ -982,7 +984,7 @@ html, body {
 
     <div class="setup-notion-help">
       <strong>Colonnes attendues dans Notion :</strong><br>
-      <code>Name</code> (titre) · <code>Type</code> (POST / REEL / STORY) · <code>Caption</code> · <code>Image</code> (URL) · <code>Likes</code> · <code>Comments</code> · <code>Views</code> · <code>Date</code> · <code>Duration</code>
+      <code>TITRE</code> · <code>FORMAT</code> (Article / Carrousel / Reel / Story) · <code>Image</code> (URL) · <code>J'AIME</code> · <code>COMMENTAIRES</code> · <code>PUBLIER LE</code> (date)
     </div>
   </div>
 </div>
@@ -1026,18 +1028,7 @@ html, body {
     </div>
     <div class="ig-profile-name" id="profileName">Mon Compte</div>
     <div class="ig-profile-bio" id="profileBio"></div>
-    <div class="ig-profile-actions">
-      <div class="ig-btn primary">Suivre</div>
-      <div class="ig-btn">Message</div>
-      <div class="ig-btn">👤+</div>
-      <div class="ig-btn icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-    </div>
-    <div class="ig-add-account" id="notionBadge">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Ajouter des comptes
-    </div>
+
   </div>
 
   <!-- Stories Bar -->
@@ -1070,10 +1061,7 @@ html, body {
   <div id="contentArea"></div>
 
   <div class="ig-footer">
-    <div class="notion-badge" onclick="showSetup()">
-      <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="3"/></svg>
-      Données Notion
-    </div>
+    <a href="https://bychanael.fr" target="_blank" style="color:#c7c7c7;text-decoration:none;font-size:12px;font-family:var(--font);">bychanael</a>
   </div>
 </div>
 
@@ -1198,7 +1186,7 @@ async function connectNotion() {
   }
 
   if (!key.startsWith('secret_') && !key.startsWith('ntn_')) {
-    showSetupError('La clé API doit commencer par "secret_".');
+    showSetupError('La clé API doit commencer par "secret_" ou "ntn_".');
     return;
   }
 
@@ -1209,6 +1197,9 @@ async function connectNotion() {
 
   state.notionKey = key;
   state.dbId = db;
+
+  // Save to localStorage so user doesn't need to re-enter
+  localStorage.setItem('ig_widget_config', JSON.stringify({ key, db, username, bio }));
 
   // Show loading state in button
   const btn = document.querySelector('.btn-primary');
@@ -1300,20 +1291,35 @@ function mapNotion(results) {
       }
       return fallback;
     };
-    const t = (g(['Type','type','Content Type'])||'POST').toUpperCase();
+    // Normalize type: Article→POST, Carrousel→POST, Reel→REEL, Story→STORY
+    const rawType = (g(['FORMAT','Type','type','Content Type'])||'POST').toUpperCase();
+    let t = 'POST';
+    if (rawType.includes('REEL')) t = 'REEL';
+    else if (rawType.includes('STORY')) t = 'STORY';
+    else if (rawType.includes('CARROUSEL') || rawType.includes('ARTICLE') || rawType.includes('POST')) t = 'POST';
+
+    const rawDate = g(['PUBLIER LE','Publier le','Date','date','Publié le']);
+
     return {
       id: page.id,
-      type: ['POST','REEL','STORY'].includes(t) ? t : 'POST',
-      caption: g(['Caption','caption','Description','Name','Titre']),
-      image: g(['Image','image','Cover','Photo','Thumbnail']),
+      type: t,
+      caption: g(['Caption','caption','TITRE','Titre','Name','Description']),
+      image: g(['IMAGE','Image','image','Cover','Photo','Thumbnail']),
       emoji: t==='REEL'?'🎬':t==='STORY'?'⭕':'🖼️',
-      likes: parseInt(g(['Likes','likes','J\'aime'])||0),
-      comments: parseInt(g(['Comments','commentaires','Commentaires'])||0),
+      likes: parseInt(g(['J\'AIME','J\'aime','Likes','likes'])||0),
+      comments: parseInt(g(['COMMENTAIRES','Commentaires','Comments','commentaires'])||0),
       views: parseInt(g(['Views','vues','Vues'])||0),
-      date: g(['Date','date','Publié le']),
+      date: rawDate,
+      dateRaw: rawDate,
       duration: g(['Duration','Durée']),
       seen: false,
     };
+  }).sort((a, b) => {
+    // Sort by date descending (most recent first)
+    if (!a.dateRaw && !b.dateRaw) return 0;
+    if (!a.dateRaw) return 1;
+    if (!b.dateRaw) return -1;
+    return new Date(b.dateRaw) - new Date(a.dateRaw);
   });
 }
 
@@ -1394,7 +1400,7 @@ function renderContent() {
   const el = $('contentArea');
 
   if (state.currentTab === 'grid') {
-    const items = [...state.posts, ...state.reels].sort(() => 0); // keep order
+    const items = [...state.posts, ...state.reels].sort((a,b) => { if(!a.dateRaw&&!b.dateRaw)return 0; if(!a.dateRaw)return 1; if(!b.dateRaw)return -1; return new Date(b.dateRaw)-new Date(a.dateRaw); });
     if (items.length === 0) { el.innerHTML = emptyState('posts'); return; }
 
     const cells = items.slice(0,9).map((item, i) => {
@@ -1576,7 +1582,21 @@ function closePostModalBtn() {
 
 // ─── Auto-load ────────────────────────────────────────────────────────────────
 const params = new URLSearchParams(location.search);
-if (params.get('demo') === '1') loadDemo();
+if (params.get('demo') === '1') {
+  loadDemo();
+} else {
+  // Auto-restore saved config
+  try {
+    const saved = JSON.parse(localStorage.getItem('ig_widget_config') || 'null');
+    if (saved && saved.key && saved.db) {
+      $('cfgKey').value = saved.key;
+      $('cfgDb').value = saved.db;
+      $('cfgUsername').value = saved.username || '';
+      $('cfgBio').value = saved.bio || '';
+      connectNotion();
+    }
+  } catch(e) {}
+}
 </script>
 </body>
 </html>
