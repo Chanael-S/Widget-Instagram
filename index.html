@@ -40,9 +40,9 @@ html,body{font-family:var(--font);background:#fff;color:var(--ig-text);max-width
 /* SETUP */
 #setupOverlay{position:fixed;inset:0;background:#fff;z-index:999;display:none;flex-direction:column;overflow-y:auto}
 #setupOverlay.open{display:flex}
-.setup-header{padding:14px 16px;border-bottom:1px solid var(--ig-border);display:flex;align-items:center;gap:10px}
+.setup-header{padding:14px 16px;display:flex;align-items:center;gap:10px}
 .setup-logo{font-size:22px;font-weight:700;font-family:Georgia,serif;font-style:italic}
-.setup-tag{font-size:11px;background:#f0f0f0;padding:3px 8px;border-radius:4px;color:var(--ig-muted);font-weight:500}
+
 .setup-body{padding:20px 16px;flex:1}
 .setup-title{font-size:17px;font-weight:600;margin-bottom:4px}
 .setup-sub{font-size:13px;color:var(--ig-muted);margin-bottom:20px;line-height:1.5}
@@ -221,15 +221,14 @@ html,body{font-family:var(--font);background:#fff;color:var(--ig-text);max-width
 <div id="setupOverlay">
   <div class="setup-header">
     <div class="setup-logo">Notion Feed</div>
-    <div class="setup-tag">pour Instagram</div>
   </div>
   <div class="setup-body">
     <div class="setup-title">Ajouter un profil</div>
     <div class="setup-sub">Visualise ton feed Instagram directement dans Notion avant de publier.</div>
     <div class="field"><label>👤 Nom du compte</label><input type="text" id="cfgUsername" placeholder="mon_compte"></div>
-    <div class="field"><label>🔑 Clé secrète de l'intégration</label><input type="password" id="cfgKey" placeholder="secret_xxx ou ntn_xxx"><div class="field-hint">notion.so/my-integrations → Internal → copie le secret</div></div>
-    <div class="field"><label>🗃️ ID de la base de données</label><input type="text" id="cfgDb" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"><div class="field-hint">Dans l'URL Notion après le dernier / et avant le ?</div></div>
-    <div class="field"><label>📝 Bio (3 lignes max)</label><textarea id="cfgBio" rows="3" placeholder="🚀 Créateur de contenu&#10;📸 Planning Instagram&#10;📍 Paris, France"></textarea></div>
+    <div class="field"><label>🔑 Clé secrète de l'intégration</label><input type="password" id="cfgKey" placeholder="secret_xxx ou ntn_xxx"><div class="field-hint">Rends-toi sur notion.so/my-integrations → Internal → copie ton secret</div></div>
+    <div class="field"><label>🗃️ ID de la base de données</label><input type="text" id="cfgDb" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"><div class="field-hint">Trouve-le dans l'URL Notion après le dernier / et avant le ?</div></div>
+    <div class="field"><label>📝 Bio (3 lignes max)</label><textarea id="cfgBio" rows="3" placeholder="Écris ta bio ici…"></textarea></div>
     <div id="setupError"></div>
     <button class="btn-primary" id="setupBtn" onclick="connectNotion()">Se connecter à Notion</button>
     <div class="setup-divider"><span>OU</span></div>
@@ -439,7 +438,7 @@ async function connectNotion(){
   const key=$('cfgKey').value.trim(),db=$('cfgDb').value.trim().replace(/-/g,''),username=$('cfgUsername').value.trim()||'mon_compte',bio=$('cfgBio').value.trim()
   $('setupError').innerHTML=''
   if(!key||!db){$('setupError').innerHTML='<div class="form-error">Renseigne la clé et l\'ID.</div>';return}
-  if(!key.startsWith('secret_')&&!key.startsWith('ntn_')){$('setupError').innerHTML='<div class="form-error">La clé doit commencer par "secret_" ou "ntn_".</div>';return}
+  if(!key.startsWith('secret_')&&!key.startsWith('ntn_')){$('setupError').innerHTML='<div class="form-error">Ta clé doit commencer par "secret_" ou "ntn_".</div>';return}
   if(db.length!==32){$('setupError').innerHTML=`<div class="form-error">L'ID doit faire 32 caractères (actuellement ${db.length}).</div>`;return}
   const btn=$('setupBtn');btn.textContent='Connexion…';btn.disabled=true
   const np={id:uid(),username,displayName:username,bio,link:'',avatar:'📷',avatarUrl:'',followers:'0',following:'0',key,db,items:[],storyGroups:[]}
