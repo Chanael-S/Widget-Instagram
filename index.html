@@ -291,9 +291,6 @@ html,body{font-family:var(--font);background:#fff;color:var(--ig-text);max-width
     <div class="ig-tab" id="tabReels" onclick="switchTab('reels')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg>
     </div>
-    <div class="ig-tab" id="tabTagged" onclick="switchTab('tagged')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-    </div>
   </div>
   <div id="contentArea"></div>
   <div class="ig-footer"><a href="https://bychanael.fr" target="_blank">bychanael</a></div>
@@ -535,7 +532,7 @@ function toggleDD(){S.ddOpen=!S.ddOpen;$('profileDD').classList.toggle('open',S.
 function switchP(id){S.cur=id;save();toggleDD();renderAll()}
 function addProfile(){if(S.ddOpen)toggleDD();$('cfgKey').value='';$('cfgDb').value='';$('cfgUsername').value='';$('cfgBio').value='';$('setupError').innerHTML='';showSetup()}
 
-function renderTabs(){['grid','reels','tagged'].forEach(t=>{$('tab'+t.charAt(0).toUpperCase()+t.slice(1)).className='ig-tab'+(t===S.tab?' active':'')})}
+function renderTabs(){['grid','reels'].forEach(t=>{$('tab'+t.charAt(0).toUpperCase()+t.slice(1)).className='ig-tab'+(t===S.tab?' active':'')})}
 function switchTab(t){S.tab=t;renderTabs();renderContent()}
 
 function renderContent(){
@@ -563,13 +560,13 @@ function renderContent(){
         <div class="ig-reel-play"><svg viewBox="0 0 24 24" fill="white" width="16" height="16"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
         ${r.views?`<div class="ig-reel-views">▶ ${fmt(r.views)}</div>`:''}
       </div>`).join('')}</div>`
-  }else{el.innerHTML=emptyH('tagged')}
+  }
 }
 
 
 
 
-function emptyH(t){const d={posts:['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>','Aucune publication','Les posts apparaîtront ici.'],reels:['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><polygon points="5 3 19 12 5 21 5 3"/></svg>','Aucun Reel','Les reels apparaîtront ici.'],tagged:['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>','Aucune mention','Les publications apparaîtront ici.']}[t]
+function emptyH(t){const d={posts:['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>','Aucune publication','Les posts apparaîtront ici.'],reels:['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><polygon points="5 3 19 12 5 21 5 3"/></svg>','Aucun Reel','Les reels apparaîtront ici.']}[t]
 return`<div class="ig-empty"><div class="ig-empty-icon">${d[0]}</div><h3>${d[1]}</h3><p>${d[2]}</p></div>`}
 
 // STORIES
