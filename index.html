@@ -56,11 +56,9 @@ html,body{font-family:var(--font);background:#fff;color:var(--ig-text);max-width
 .ig-header{position:sticky;top:0;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--ig-border);padding:12px 16px;display:flex;align-items:center;z-index:100}
 .ig-logo{font-size:20px;font-weight:700;font-family:Georgia,serif;font-style:italic;flex:1;letter-spacing:-.5px;cursor:pointer;display:flex;align-items:center;gap:5px}
 .ig-logo-chevron{font-size:12px;color:var(--ig-muted);transition:transform .2s;line-height:1}
-.ig-header-actions{display:flex;gap:16px;align-items:center}
+.ig-header-actions{display:flex;gap:16px;align-items:center;margin-left:auto}
 .ig-icon-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;color:var(--ig-text)}
 .ig-icon-btn svg{width:24px;height:24px}
-.auto-dot{width:7px;height:7px;background:#4cd964;border-radius:50%;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* PROFILE DROPDOWN */
 .profile-dd{position:absolute;top:52px;left:0;right:0;background:#fff;border-bottom:1px solid var(--ig-border);box-shadow:0 4px 12px rgba(0,0,0,.08);z-index:99;display:none;max-width:470px;margin:0 auto}
@@ -249,8 +247,7 @@ html,body{font-family:var(--font);background:#fff;color:var(--ig-text);max-width
       <span class="ig-logo-chevron" id="logoChevron">▾</span>
     </div>
     <div class="ig-header-actions">
-      <div class="auto-dot" title="Actualisation auto toutes les minutes"></div>
-      <button class="ig-icon-btn" onclick="refreshFeed()" title="Actualiser">
+<button class="ig-icon-btn" onclick="refreshFeed()" title="Actualiser">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
       </button>
     </div>
@@ -403,7 +400,7 @@ const $=id=>document.getElementById(id)
 const fmt=n=>!n?'0':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1000?(n/1000).toFixed(1)+'K':String(n)
 const uid=()=>Math.random().toString(36).slice(2,9)
 
-let S={profiles:[],cur:null,tab:'grid',storyItems:[],storyIdx:null,storyTimer:null,seen:{},ddOpen:false,refreshTimer:null}
+let S={profiles:[],cur:null,tab:'grid',storyItems:[],storyIdx:null,storyTimer:null,seen:{},ddOpen:false}
 
 // PERSIST
 function save(){localStorage.setItem(SKEY,JSON.stringify({profiles:S.profiles,cur:S.cur,seen:S.seen}))}
@@ -452,7 +449,7 @@ async function connectNotion(){
   if(!items){$('setupError').innerHTML='<div class="form-error">Connexion échouée. Vérifie ta clé et l\'ID.</div>';return}
   np.items=items;np.followers=String(items.filter(i=>i.type!=='STORY').length)
   S.profiles.push(np);S.cur=np.id;save();hideSetup()
-  $('app').style.display='block';renderAll();startRefresh()
+  $('app').style.display='block';renderAll()
 }
 
 function loadDemo(){
@@ -468,18 +465,10 @@ function loadDemo(){
     {id:'p4',type:'POST',caption:'Street 📸',emoji:'📸',likes:1567,comments:94,dateRaw:'2026-02-15',date:'15 fév',image:'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&q=80'},
     {id:'r3',type:'REEL',caption:'Carbonara 🍝',emoji:'🍝',likes:9241,comments:512,views:143000,dateRaw:'2026-02-14',date:'14 fév',duration:'2:58',image:'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80'},
   ]}
-  S.profiles=[d];S.cur='demo';save();hideSetup();$('app').style.display='block';renderAll();startRefresh()
+  S.profiles=[d];S.cur='demo';save();hideSetup();$('app').style.display='block';renderAll()
 }
 
-// AUTO REFRESH
-function startRefresh(){
-  if(S.refreshTimer)clearInterval(S.refreshTimer)
-  S.refreshTimer=setInterval(async()=>{
-    let changed=false
-    for(const p of S.profiles){if(!p.key||!p.db)continue;const items=await fetchN(p);if(items){p.items=items;changed=true}}
-    if(changed){save();renderContent();renderSG()}
-  },60000)
-}
+
 
 async function refreshFeed(){
   const p=curP();if(!p||!p.key)return
@@ -558,14 +547,14 @@ function renderContent(){
   const reels=all.filter(i=>i.type==='REEL')
   if(S.tab==='grid'){
     if(grid.length===0){el.innerHTML=emptyH('posts');return}
-    const cells=grid.slice(0,9).map((item,i)=>`
+    const cells=grid.slice(0,50).map((item,i)=>`
       <div class="ig-grid-item" onclick="openPost('${item.id}')" style="animation-delay:${i*0.04}s">
         ${item.image?`<img src="${item.image}" alt="" onerror="this.style.display='none'">`:``}
         <div class="ig-grid-emoji"${item.image?' style="display:none"':''}>${item.emoji}</div>
         ${item.type==='REEL'?`<div class="ig-grid-badge"><svg viewBox="0 0 24 24" fill="white" width="18" height="18"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`:''}
         <div class="ig-grid-overlay">${item.type==='REEL'?`<span>▶ ${fmt(item.views)}</span>`:''}<span>❤ ${fmt(item.likes)}</span><span>💬 ${fmt(item.comments)}</span></div>
       </div>`)
-    while(cells.length<9)cells.push(`<div class="ig-grid-empty">Vide</div>`)
+
     el.innerHTML=`<div class="ig-grid">${cells.join('')}</div>`
   }else if(S.tab==='reels'){
     if(reels.length===0){el.innerHTML=emptyH('reels');return}
@@ -668,7 +657,7 @@ document.addEventListener('click',e=>{if(S.ddOpen&&!e.target.closest('.ig-logo')
 // INIT
 window.addEventListener('load',()=>{
   if(new URLSearchParams(location.search).get('demo')==='1'){loadDemo();return}
-  if(load()&&S.profiles.length>0){$('app').style.display='block';renderAll();startRefresh();refreshFeed()}
+  if(load()&&S.profiles.length>0){$('app').style.display='block';renderAll();refreshFeed()}
   else showSetup()
 })
 </script>
